@@ -11,18 +11,17 @@ String datatype = "STRING";
 String Path = "";
 String request ="";
 
-#define LSW PA14 
-#define RSW PA13
 #define TRIG_PIN PC14
 #define ECHO_PIN PC15
-#define M1 PA0
-#define M2 PA1
-#define M3 PB8
-#define M4 PB9
+#define LEFT_P PA0
+#define LEFT_N PA1
+#define RIGHT_P PB8
+#define RIGHT_N PB9
 
 int textSize = 1;
 long duration;
 float distance;
+float prev;
 
 bool lastStateLSW = 0;
 bool lastStateRSW = 0;
@@ -32,6 +31,20 @@ bool systemReady = false;
 Servo s1;
 
 Adafruit_SH1106 display(-1);
+
+float ema(float val);
+float getDistance();
+void updateDisplay();
+void espInit();
+void oledDisplay(String msg);
+void forward();
+void left();
+void right();
+void stop();
+void runObstacleMode();
+void lookLeft();
+void lookRight();
+void lookCenter();
 
 enum RequestType {
   REQ_SSID,
@@ -47,6 +60,29 @@ RequestType getRequestType(String req) {
   else if (req == "REQ:PATH") return REQ_PATH;
   else if (req == "REQ:TYPE") return REQ_TYPE;
   else return REQ_UNKNOWN;
+}
+
+float ema(float val){
+  prev = val;
+  float alpha = 0.6;
+
+  float filtered = alpha * prev + (1 - alpha) * val;
+  prev = filtered;
+  return filtered;
+}
+
+float getDistance(){
+  digitalWrite(TRIG_PIN,0);
+  delayMicroseconds(2);
+
+  digitalWrite(TRIG_PIN,1);
+  delayMicroseconds(10);
+  digitalWrite(TRIG_PIN,0);
+
+  duration = pulseIN(ECHO_PIN,1);
+  distance = duration * 0.0343 / 2;
+
+  return ema(distance);
 }
 
 void updateDisplay(){
@@ -98,6 +134,34 @@ void oledDisplay(String msg){
   display.setTextColor(WHITE);
   display.println(msg);
   display.display();
+}
+
+void forward(){
+  digitalWrite(LEFT_P,1);
+  digitalWrite(LEFT_N,0);
+  digitalWrite(RIGHT_P,1);
+  digitalWrite(RIGHT_N,0);
+}
+
+void left(){
+  digitalWrite(LEFT_P,1);
+  digitalWrite(LEFT_N,0);
+  digitalWrite(RIGHT_P,1);
+  digitalWrite(RIGHT_N,0);
+}
+
+void right(){
+  digitalWrite(LEFT_P,1);
+  digitalWrite(LEFT_N,0);
+  digitalWrite(RIGHT_P,1);
+  digitalWrite(RIGHT_N,0);
+}
+
+void stop(){
+  digitalWrite(LEFT_P,1);
+  digitalWrite(LEFT_N,0);
+  digitalWrite(RIGHT_P,1);
+  digitalWrite(RIGHT_N,0);
 }
 
 void setup() {
