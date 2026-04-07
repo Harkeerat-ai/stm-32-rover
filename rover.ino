@@ -17,6 +17,10 @@ String request ="";
 #define LEFT_N PA1
 #define RIGHT_P PB8
 #define RIGHT_N PB9
+#define OBSTACLE_DISTANCE 20
+#define LEFT_ANGLE 150
+#define RIGHT_ANGLE 30
+#define CENTER_ANGLE 90
 
 int textSize = 1;
 long duration;
@@ -41,10 +45,12 @@ void forward();
 void left();
 void right();
 void stop();
-void runObstacleMode();
 void lookLeft();
 void lookRight();
 void lookCenter();
+void moveSmoothWithScan(int from, int to);
+void runObstacleMode();
+
 
 enum RequestType {
   REQ_SSID,
@@ -146,22 +152,95 @@ void forward(){
 void left(){
   digitalWrite(LEFT_P,1);
   digitalWrite(LEFT_N,0);
-  digitalWrite(RIGHT_P,1);
-  digitalWrite(RIGHT_N,0);
+  digitalWrite(RIGHT_P,0);
+  digitalWrite(RIGHT_N,1);
 }
 
 void right(){
-  digitalWrite(LEFT_P,1);
-  digitalWrite(LEFT_N,0);
+  digitalWrite(LEFT_P,0);
+  digitalWrite(LEFT_N,1);
   digitalWrite(RIGHT_P,1);
   digitalWrite(RIGHT_N,0);
 }
 
 void stop(){
-  digitalWrite(LEFT_P,1);
+  digitalWrite(LEFT_P,0);
   digitalWrite(LEFT_N,0);
-  digitalWrite(RIGHT_P,1);
+  digitalWrite(RIGHT_P,0);
   digitalWrite(RIGHT_N,0);
+}
+
+void lookLeft(){
+  int current = servo.read();
+  moveSmoothWithScan(current, LEFT_ANGLE);
+}
+
+void lookRight(){
+  int current = servo.read();
+  moveSmoothWithScan(current,RIGHT_ANGLE);
+}
+
+void lookCenter(){
+  int current = servo.read();
+  moveSmoothWithScan(current,CENTER_ANGLE);
+}
+
+void moveSmoothWithScan(int from, into to){
+  if(from < to){
+    for (int i = from; i <= to; i++){
+      servo.write(i);
+
+      float dist = getDistance();
+
+      if(dist < OBSTACLE_DISTANCE){
+        stop();
+      }
+
+      delay(10);
+    }
+  }else{
+    for (int i = from; i>=to ; i--){
+      servo.write(i);
+
+      float dist = getDistance();
+
+      if(dist < OBSTACLE_DISTANCE){
+        stop();
+      }
+
+      delay(10);
+    }
+  }
+}
+
+void runObstacleMode(){
+  float dist = getDistance();
+
+  if(dist>=OBSTACLE_DISTANCE){
+    forward();
+    return;
+  }
+
+  stop();
+
+  lookLeft();
+  delay(200);
+  float leftDist = getDistance();
+
+  lookRight()
+  delay(200);
+  float rightDist = getDistance();
+
+  lookCenter();
+  delay(100);
+
+  if(leftDist > rightDist){
+    left();
+  }else{
+    right();
+  }
+
+  delay(400);
 }
 
 void setup() {
@@ -193,6 +272,4 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-
-}
+  // put your main code here, to run repeatedly
