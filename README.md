@@ -1,7 +1,6 @@
 # STM32 Autonomous Rover (Arduino IDE → Modular PlatformIO Upgrade)
 
 ## 🚀 Overview
-
 This project implements an autonomous rover using an STM32 Blue Pill for real-time control and an ESP8266 (ESP-12F) for IoT telemetry.
 
 The system was initially developed using the Arduino IDE as a single `.ino` file for rapid prototyping, and later structured into a modular architecture using PlatformIO for scalability and maintainability.
