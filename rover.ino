@@ -69,7 +69,7 @@ RequestType getRequestType(String req) {
 }
 
 float ema(float val){
-  prev = val;
+  float prev = val;
   float alpha = 0.6;
 
   float filtered = alpha * prev + (1 - alpha) * val;
@@ -85,8 +85,8 @@ float getDistance(){
   delayMicroseconds(10);
   digitalWrite(TRIG_PIN,0);
 
-  duration = pulseIN(ECHO_PIN,1);
-  distance = duration * 0.0343 / 2;
+  duration = pulseIn(ECHO_PIN,1);
+  float distance = duration * 0.0343 / 2;
 
   return ema(distance);
 }
@@ -171,24 +171,24 @@ void stop(){
 }
 
 void lookLeft(){
-  int current = servo.read();
+  int current = s1.read();
   moveSmoothWithScan(current, LEFT_ANGLE);
 }
 
 void lookRight(){
-  int current = servo.read();
+  int current = s1.read();
   moveSmoothWithScan(current,RIGHT_ANGLE);
 }
 
 void lookCenter(){
-  int current = servo.read();
+  int current = s1.read();
   moveSmoothWithScan(current,CENTER_ANGLE);
 }
 
-void moveSmoothWithScan(int from, into to){
+void moveSmoothWithScan(int from, int to){
   if(from < to){
     for (int i = from; i <= to; i++){
-      servo.write(i);
+      s1.write(i);
 
       float dist = getDistance();
 
@@ -200,7 +200,7 @@ void moveSmoothWithScan(int from, into to){
     }
   }else{
     for (int i = from; i>=to ; i--){
-      servo.write(i);
+      s1.write(i);
 
       float dist = getDistance();
 
@@ -227,7 +227,7 @@ void runObstacleMode(){
   delay(200);
   float leftDist = getDistance();
 
-  lookRight()
+  lookRight();
   delay(200);
   float rightDist = getDistance();
 
@@ -244,7 +244,7 @@ void runObstacleMode(){
 }
 
 void setup() {
-  // put your setup code here, to run once:
+  
   Serial.begin(9600);
   Serial3.begin(9600);
 
@@ -252,16 +252,15 @@ void setup() {
 
   Path = "commands/" + userID + "/" + page;
 
-  pinMode(LSW, INPUT);
-  pinMode(RSW, INPUT);
   pinMode(TRIG_PIN, OUTPUT);
   pinMode(ECHO_PIN, INPUT);
-  pinMode(M1,OUTPUT);
-  pinMode(M2,OUTPUT);
-  pinMode(M3,OUTPUT);
-  pinMode(M4,OUTPUT);
+  pinMode(LEFT_P,OUTPUT);
+  pinMode(LEFT_N,OUTPUT);
+  pinMode(RIGHT_P,OUTPUT);
+  pinMode(RIGHT_N,OUTPUT);
   
   s1.attach(PB1);
+  s1.write(CENTER_ANGLE);
 
   display.begin(SH1106_SWITCHCAPVCC, 0x3C);
 
@@ -272,4 +271,14 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly
+  float dist = getDistance();
+
+  runObstacleMode();
+
+  Serial3.println("TERMINAL: The distance = ");
+  Serial3.print(dist);
+  oledDisplay("Distance : ");
+  oledDisplay(String(dist));
+  Serial3.println(",MODE:OBSTACLE\n");
+  delay(300);
+}
